@@ -1,0 +1,47 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DB_URL")
+}
+
+model User {
+  id              String   @id @default(uuid()) @db.Uuid
+  name            String   @unique
+  refreshToken    String   @unique @map("refresh_token")
+
+  updatedAt       DateTime @default(now()) @map("updated_at")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  Message         Message[]
+
+  @@map("users")
+}
+
+model Room {
+  id              Int       @id @default(autoincrement())
+  name            String    @unique
+
+  updatedAt       DateTime  @default(now()) @map("updated_at")
+  createdAt       DateTime  @default(now()) @map("created_at")
+
+  messages        Message[]
+
+  @@map("rooms")
+}
+
+model Message {
+  id              Int      @id @default(autoincrement())
+  text            String
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  roomId          Int      @map("room_id")
+  room            Room     @relation(fields: [roomId], references: [id])
+
+  authorId        String   @db.Uuid @map("author_id")
+  author          User     @relation(fields: [authorId], references: [id])
+
+  @@map("messages")
+}
