@@ -16,7 +16,12 @@ async function create(
   try {
     return normalize(await userRepository.create(name, tx));
   } catch (err) {
-    if (err.code === 'P2002') {
+    if (
+      typeof err === 'object' &&
+      err !== null &&
+      'code' in err &&
+      (err as any).code === 'P2002'
+    ) {
       throw ApiError.badRequest('Registration error', {
         name: 'User already exists',
       });

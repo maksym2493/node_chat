@@ -1,6 +1,6 @@
 import { NormalizedUser } from './NormalizedUser';
 
-export interface RegistrationData {
+export interface AuthData {
   accessToken: string;
   refreshToken: string;
   normalizedUser: NormalizedUser;

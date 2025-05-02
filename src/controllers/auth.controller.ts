@@ -1,19 +1,26 @@
 import { RequestHandler, Response } from 'express';
+
+import { AuthData } from '../types/AuthData';
 import { authService } from '../services/auth.service';
-import { RegistrationData } from '../types/RegistrationData';
+import { tokenService } from '../services/token.service';
 
 const register: RequestHandler = async (req, res) => {
   const { name } = req.body;
-  const registrationData = await authService.register(name);
+  const authData = await authService.register(name);
 
-  await sendAuthentication(res, registrationData);
+  await sendAuthentication(res, authData);
 };
 
-const refreshToken: RequestHandler = (req, res) => {};
+const refreshToken: RequestHandler = async (req, res) => {
+  const refreshToken = req.cookies.refreshToken as string;
+  const authData = await tokenService.refresh(refreshToken);
+
+  await sendAuthentication(res, authData);
+};
 
 async function sendAuthentication(
   res: Response,
-  { refreshToken, normalizedUser: user, ...otherData }: RegistrationData,
+  { refreshToken, normalizedUser: user, ...otherData }: AuthData,
 ) {
   res.cookie('refreshToken', refreshToken, {
     maxAge: 7 * 24 * 60 * 60 * 1000,

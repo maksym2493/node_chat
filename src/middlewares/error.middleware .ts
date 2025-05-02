@@ -12,8 +12,6 @@ export const errorMiddleware: ErrorRequestHandler = (err, _req, res, _next) => {
     return;
   }
 
+  console.log(err);
   res.status(500).json({ message: 'Internal Server Error' });
 };
-
-// 422 Unprocessable Entity — для помилок валідації даних (коли дані мають правильну структуру, але певні поля не відповідають вимогам).
-// 400 Bad Request — якщо дані взагалі не можуть бути прийняті через некоректну структуру або формат.
