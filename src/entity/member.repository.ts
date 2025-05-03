@@ -1,0 +1,16 @@
+import { db } from '../utils/db';
+import { Member } from '@prisma/client';
+import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
+
+class MemberRepository {
+  create(
+    roomId: string,
+    userId: string,
+    creator: boolean,
+    tx?: PrismaTransactionClient,
+  ): Promise<Member> {
+    return (tx || db).member.create({ data: { roomId, userId, creator } });
+  }
+}
+
+export const memberRepository = new MemberRepository();

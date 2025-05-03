@@ -1,10 +1,17 @@
-import { cookie } from 'express-validator';
+import { cookie, header } from 'express-validator';
 
 const refreshToken = cookie('refreshToken')
   .exists()
-  .withMessage('Token is required')
+  .withMessage('Refresh token is required')
 
   .isJWT()
-  .withMessage('Invalid token');
+  .withMessage('Invalid refresh token');
 
-export const tokenValidation = { refreshToken };
+const accessToken = header('authorization')
+  .exists()
+  .withMessage('Access token is required')
+
+  .matches(/^Bearer\s[\w-]+\.[\w-]+\.[\w-]+$/)
+  .withMessage('Invalid access token');
+
+export const tokenValidation = { refreshToken, accessToken };
