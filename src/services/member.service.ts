@@ -18,11 +18,11 @@ class MemberService {
     return member;
   }
 
-  async join(roomName: string, userId: string): Promise<NormalizedRoom> {
-    const normalizedRoom = await roomService.getByName(roomName);
+  async join(roomId: string, userId: string): Promise<NormalizedRoom> {
+    const normalizedRoom = await roomService.get(roomId);
 
     if (!normalizedRoom) {
-      throw ApiError.badRequest('Joining error', {
+      throw ApiError.notFound('Joining error', {
         name: 'Room with this name does not exist',
       });
     }
@@ -37,13 +37,23 @@ class MemberService {
         'code' in err &&
         (err as any).code === 'P2002'
       ) {
-        throw ApiError.badRequest('Joining error', {
+        throw ApiError.conflict('Joining error', {
           name: 'Room already in your list',
         });
       }
 
       throw err;
     }
+  }
+
+  async getOrThrow(roomId: string, userId: string): Promise<Member> {
+    const member = await memberRepository.get(roomId, userId);
+
+    if (!member) {
+      throw ApiError.forbidden();
+    }
+
+    return member;
   }
 }
 

@@ -11,6 +11,12 @@ class MemberRepository {
   ): Promise<Member> {
     return (tx || db).member.create({ data: { roomId, userId, creator } });
   }
+
+  get(roomId: string, userId: string): Promise<Member | null> {
+    return db.member.findUnique({
+      where: { roomId_userId: { roomId, userId } },
+    });
+  }
 }
 
 export const memberRepository = new MemberRepository();

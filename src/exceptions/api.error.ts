@@ -35,10 +35,26 @@ export class ApiError extends Error {
     });
   }
 
-  static notFound(errors?: Errors) {
+  static forbidden(message: string = 'Access denied', errors?: Errors) {
     return new ApiError({
-      message: 'Not Found',
+      message: message,
+      status: 403,
+      ...(errors && { errors }),
+    });
+  }
+
+  static notFound(message: string = 'Not Found', errors?: Errors) {
+    return new ApiError({
+      message: message,
       status: 404,
+      ...(errors && { errors }),
+    });
+  }
+
+  static conflict(message: string, errors?: Errors) {
+    return new ApiError({
+      message,
+      status: 409,
       ...(errors && { errors }),
     });
   }

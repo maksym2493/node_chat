@@ -10,12 +10,12 @@ export const authRoute = Router();
 
 authRoute.post(
   '/registration',
-  nameValidation(),
+  nameValidation,
   validationMiddleware,
   authController.register,
 );
 
-authRoute.get(
+authRoute.post(
   '/refresh-token',
   cookieParser(),
   tokenValidation.refreshToken,

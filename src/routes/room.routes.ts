@@ -1,23 +1,40 @@
 import { Router } from 'express';
+import { memberRoute } from './member.route';
+import { messageRoute } from './message.route';
 import { roomController } from '../controllers/room.controller';
 
 import { nameValidation } from '../validations/name.validation';
+import { roomIdValidation } from '../validations/roomId.validation';
 import { validationMiddleware } from '../middlewares/validation.middleware';
 
 export const roomRoute = Router();
 
 roomRoute.get('/', roomController.getAll);
 
+roomRoute.get(
+  '/:roomId',
+  roomIdValidation,
+  validationMiddleware,
+  roomController.getWithRole,
+);
+
 roomRoute.post(
   '/',
-  nameValidation(),
+  nameValidation,
   validationMiddleware,
   roomController.create,
 );
 
-roomRoute.post(
-  '/join',
-  nameValidation(),
+roomRoute.use(
+  '/:roomId/members',
+  roomIdValidation,
   validationMiddleware,
-  roomController.join,
+  memberRoute,
+);
+
+roomRoute.use(
+  '/:roomId/messages',
+  roomIdValidation,
+  validationMiddleware,
+  messageRoute,
 );

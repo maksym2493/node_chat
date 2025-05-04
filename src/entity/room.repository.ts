@@ -1,8 +1,9 @@
 import { db } from '../utils/db';
-import { Member, Message, Room } from '@prisma/client';
+import { Member, Room } from '@prisma/client';
+import { RawMessage } from '../types/RawMessage';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
-type RawRoomInfo = Room & { messages: Message[]; members: Member[] };
+type RawRoomInfo = Room & { messages: RawMessage[]; members: Member[] };
 
 class RoomRepository {
   getAll(userId: string): Promise<RawRoomInfo[]> {
@@ -15,9 +16,18 @@ class RoomRepository {
 
       include: {
         messages: {
-          orderBy: { createdAt: 'desc' },
           take: 1,
+          orderBy: { createdAt: 'desc' },
+
+          include: {
+            author: {
+              select: {
+                name: true,
+              },
+            },
+          },
         },
+
         members: {
           where: { userId },
         },
@@ -31,8 +41,8 @@ class RoomRepository {
     });
   }
 
-  getByName(name: string): Promise<Room | null> {
-    return db.room.findUnique({ where: { name } });
+  get(id: string): Promise<Room | null> {
+    return db.room.findUnique({ where: { id } });
   }
 }
 

@@ -1,34 +1,68 @@
-import { Message, Room } from '@prisma/client';
-import { ApiError } from '../exceptions/api.error';
+import { Room } from '@prisma/client';
+import { RawMessage } from '../types/RawMessage';
+import { RoomPreview } from '../types/RoomPreview';
 import { NormalizedRoom } from '../types/NormalizedRoom';
-import { roomRepository } from '../entity/room.repository';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
+import { memberService } from './member.service';
+import { messageService } from './message.service';
+import { roomRepository } from '../entity/room.repository';
+
+import { ApiError } from '../exceptions/api.error';
+
+type RoomWithRole = Omit<RoomPreview, 'lastMessage'>;
+
 class RoomService {
-  normalize(
-    { id, name }: Room,
-    creator: boolean = false,
-    lastMessage: Message | null = null,
-  ): NormalizedRoom {
-    return { id, name, creator, lastMessage };
+  normalize({ id, name }: Room): NormalizedRoom {
+    return { id, name };
   }
 
-  async getAll(userId: string): Promise<NormalizedRoom[]> {
+  buildRoomPreview(
+    room: Room,
+    creator: boolean = false,
+    lastMessage: RawMessage | null = null,
+  ): RoomPreview {
+    return {
+      ...this.normalize(room),
+      creator,
+      lastMessage: lastMessage
+        ? messageService.buildMessagePreview(lastMessage)
+        : null,
+    };
+  }
+
+  async getAll(userId: string): Promise<RoomPreview[]> {
     const rawRooms = await roomRepository.getAll(userId);
 
     return rawRooms.map(({ messages, members, ...room }) =>
-      this.normalize(room, members[0].creator, messages[0] || null),
+      this.buildRoomPreview(room, members[0].creator, messages[0]),
     );
+  }
+
+  async get(id: string): Promise<NormalizedRoom | null> {
+    const room = await roomRepository.get(id);
+
+    return room ? this.normalize(room) : null;
+  }
+
+  async getOrThrow(id: string): Promise<NormalizedRoom> {
+    const normalizedRoom = await this.get(id);
+
+    if (!normalizedRoom) {
+      throw ApiError.notFound('Room not found');
+    }
+
+    return normalizedRoom;
   }
 
   async create(
     name: string,
     tx?: PrismaTransactionClient,
-  ): Promise<NormalizedRoom> {
+  ): Promise<RoomPreview> {
     try {
       const room = await roomRepository.create(name, tx);
 
-      return this.normalize(room, true);
+      return this.buildRoomPreview(room, true);
     } catch (err) {
       if (
         typeof err === 'object' &&
@@ -36,7 +70,7 @@ class RoomService {
         'code' in err &&
         (err as any).code === 'P2002'
       ) {
-        throw ApiError.badRequest('Creation error', {
+        throw ApiError.conflict('Creation error', {
           name: 'Room already exists',
         });
       }
@@ -45,10 +79,14 @@ class RoomService {
     }
   }
 
-  async getByName(name: string): Promise<NormalizedRoom | null> {
-    const room = await roomRepository.getByName(name);
+  async getWithRole(id: string, userId: string): Promise<RoomWithRole> {
+    const normalizedRoom = await this.getOrThrow(id);
+    const member = await memberService.getOrThrow(id, userId);
 
-    return room ? this.normalize(room) : null;
+    return {
+      ...normalizedRoom,
+      creator: member.creator,
+    };
   }
 }
 

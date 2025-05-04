@@ -1,21 +1,12 @@
-import { body, param } from 'express-validator';
-import { ValidationChain } from 'express-validator';
+import { body } from 'express-validator';
 
-const buildNameValidation = (
-  fromParams: boolean = false,
-): ValidationChain[] => {
-  const source = fromParams ? param : body;
+export const nameValidation = body('name')
+  .notEmpty()
+  .withMessage('Name is required')
 
-  return [
-    source('name')
-      .isString()
-      .withMessage('Name must be string')
-      .trim()
-      .notEmpty()
-      .withMessage('Name is required')
-      .isLength({ min: 6, max: 50 })
-      .withMessage('Name must be between 6 and 50 characters long'),
-  ];
-};
+  .isString()
+  .withMessage('Name must be string')
 
-export const nameValidation = buildNameValidation;
+  .trim()
+  .isLength({ min: 6, max: 50 })
+  .withMessage('Name must be between 6 and 50 characters long');

@@ -6,14 +6,27 @@ import { roomService } from '../services/room.service';
 import { NormalizedRoom } from '../types/NormalizedRoom';
 import { memberService } from '../services/member.service';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
+import { ApiError } from '../exceptions/api.error';
 
 const getAll: RequestHandler = async (req, res) => {
   const { id: userId } = req.user!;
-  const rooms = await roomService.getAll(userId);
+  const preview = await roomService.getAll(userId);
 
   res.json({
-    rooms,
     message: 'OK',
+    data: preview,
+  });
+};
+
+const getWithRole: RequestHandler = async (req, res) => {
+  const { id: userId } = req.user!;
+  const { roomId: id } = req.params;
+
+  const roomWithRole = await roomService.getWithRole(id, userId);
+
+  res.json({
+    message: 'OK',
+    data: roomWithRole,
   });
 };
 
@@ -21,40 +34,19 @@ const create: RequestHandler = async (req, res) => {
   const { name } = req.body;
   const { id: userId } = req.user!;
 
-  const normalizedFullRoom = await db.$transaction(
+  const preview = await db.$transaction(
     async (tx: PrismaTransactionClient): Promise<NormalizedRoom> => {
-      const normalizedFullRoom = await roomService.create(name, tx);
+      const preview = await roomService.create(name, tx);
+      await memberService.create(preview.id, userId, true, tx);
 
-      const member = await memberService.create(
-        normalizedFullRoom.id,
-        userId,
-        true,
-        tx,
-      );
-
-      return normalizedFullRoom;
+      return preview;
     },
   );
 
-  res.json({
+  res.status(201).json({
     message: 'OK',
-    room: normalizedFullRoom,
+    data: preview,
   });
 };
 
-const join: RequestHandler = async (req, res) => {
-  const { name } = req.body;
-  const { id: userId } = req.user!;
-  const normalizedRoom = await memberService.join(name, userId);
-
-  res.json({
-    room: {
-      ...normalizedRoom,
-      creator: false,
-      lastMessage: null,
-    },
-    message: 'OK',
-  });
-};
-
-export const roomController = { getAll, create, join };
+export const roomController = { getAll, getWithRole, create };

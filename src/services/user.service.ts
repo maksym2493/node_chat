@@ -22,7 +22,7 @@ async function create(
       'code' in err &&
       (err as any).code === 'P2002'
     ) {
-      throw ApiError.badRequest('Registration error', {
+      throw ApiError.conflict('Registration error', {
         name: 'User already exists',
       });
     }

@@ -29,11 +29,13 @@ async function sendAuthentication(
     secure: true,
   });
 
-  res.json({
+  res.status(201).json({
     message: 'OK',
 
-    user,
-    ...otherData,
+    data: {
+      user,
+      ...otherData,
+    },
   });
 }
 

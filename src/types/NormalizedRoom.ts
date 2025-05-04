@@ -1,6 +1,3 @@
-import { Message, Room } from '@prisma/client';
+import { Room } from '@prisma/client';
 
-export type NormalizedRoom = Pick<Room, 'id' | 'name'> & {
-  creator: boolean;
-  lastMessage: Message | null;
-};
+export type NormalizedRoom = Pick<Room, 'id' | 'name'>;
