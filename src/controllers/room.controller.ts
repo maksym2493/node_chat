@@ -20,7 +20,7 @@ const getAll: RequestHandler = async (req, res) => {
 
 const getWithRole: RequestHandler = async (req, res) => {
   const { id: userId } = req.user!;
-  const { roomId: id } = req.params;
+  const { roomId: id } = req.params as { roomId: string };
 
   const roomWithRole = await roomService.getWithRole(id, userId);
 
@@ -31,7 +31,7 @@ const getWithRole: RequestHandler = async (req, res) => {
 };
 
 const create: RequestHandler = async (req, res) => {
-  const { name } = req.body;
+  const { name } = req.body as { name: string };
   const { id: userId } = req.user!;
 
   const preview = await db.$transaction(

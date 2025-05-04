@@ -5,7 +5,7 @@ import { authService } from '../services/auth.service';
 import { tokenService } from '../services/token.service';
 
 const register: RequestHandler = async (req, res) => {
-  const { name } = req.body;
+  const { name } = req.body as { name: string };
   const authData = await authService.register(name);
 
   await sendAuthentication(res, authData);

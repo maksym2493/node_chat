@@ -4,7 +4,6 @@ import { RoomPreview } from '../types/RoomPreview';
 import { NormalizedRoom } from '../types/NormalizedRoom';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
-import { memberService } from './member.service';
 import { messageService } from './message.service';
 import { roomRepository } from '../entity/room.repository';
 
@@ -25,6 +24,7 @@ class RoomService {
     return {
       ...this.normalize(room),
       creator,
+
       lastMessage: lastMessage
         ? messageService.buildMessagePreview(lastMessage)
         : null,
@@ -45,16 +45,6 @@ class RoomService {
     return room ? this.normalize(room) : null;
   }
 
-  async getOrThrow(id: string): Promise<NormalizedRoom> {
-    const normalizedRoom = await this.get(id);
-
-    if (!normalizedRoom) {
-      throw ApiError.notFound('Room not found');
-    }
-
-    return normalizedRoom;
-  }
-
   async create(
     name: string,
     tx?: PrismaTransactionClient,
@@ -64,28 +54,26 @@ class RoomService {
 
       return this.buildRoomPreview(room, true);
     } catch (err) {
-      if (
-        typeof err === 'object' &&
-        err !== null &&
-        'code' in err &&
-        (err as any).code === 'P2002'
-      ) {
-        throw ApiError.conflict('Creation error', {
-          name: 'Room already exists',
-        });
-      }
-
       throw err;
     }
   }
 
   async getWithRole(id: string, userId: string): Promise<RoomWithRole> {
-    const normalizedRoom = await this.getOrThrow(id);
-    const member = await memberService.getOrThrow(id, userId);
+    const roomWithRole = await roomRepository.getWithRole(id, userId);
+
+    if (!roomWithRole) {
+      throw ApiError.notFound('Room not found');
+    }
+
+    const { members, ...room } = roomWithRole;
+
+    if (!members.length) {
+      throw ApiError.forbidden();
+    }
 
     return {
-      ...normalizedRoom,
-      creator: member.creator,
+      ...this.normalize(room),
+      creator: members[0].creator,
     };
   }
 }

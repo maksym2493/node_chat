@@ -5,6 +5,9 @@ import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
 type RawRoomInfo = Room & { messages: RawMessage[]; members: Member[] };
 
+type Role = Pick<Member, 'creator'>;
+type RawRoomWithRole = Room & { members: Role[] };
+
 class RoomRepository {
   getAll(userId: string): Promise<RawRoomInfo[]> {
     return db.room.findMany({
@@ -20,11 +23,7 @@ class RoomRepository {
           orderBy: { createdAt: 'desc' },
 
           include: {
-            author: {
-              select: {
-                name: true,
-              },
-            },
+            author: true,
           },
         },
 
@@ -43,6 +42,26 @@ class RoomRepository {
 
   get(id: string): Promise<Room | null> {
     return db.room.findUnique({ where: { id } });
+  }
+
+  getWithRole(id: string, userId: string): Promise<RawRoomWithRole | null> {
+    return db.room.findUnique({
+      where: { id },
+
+      include: {
+        members: {
+          take: 1,
+
+          where: {
+            userId,
+          },
+
+          select: {
+            creator: true,
+          },
+        },
+      },
+    });
   }
 }
 

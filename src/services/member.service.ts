@@ -45,16 +45,6 @@ class MemberService {
       throw err;
     }
   }
-
-  async getOrThrow(roomId: string, userId: string): Promise<Member> {
-    const member = await memberRepository.get(roomId, userId);
-
-    if (!member) {
-      throw ApiError.forbidden();
-    }
-
-    return member;
-  }
 }
 
 export const memberService = new MemberService();

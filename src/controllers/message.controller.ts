@@ -2,7 +2,7 @@ import { RequestHandler } from 'express';
 import { messageService } from '../services/message.service';
 
 const getAll: RequestHandler = async (req, res) => {
-  const { roomId } = req.params;
+  const { roomId } = req.params as { roomId: string };
   const { id: userId } = req.user!;
   const previews = await messageService.getAll(roomId, userId);
 
@@ -10,8 +10,8 @@ const getAll: RequestHandler = async (req, res) => {
 };
 
 const create: RequestHandler = async (req, res) => {
-  const { text } = req.body;
-  const { roomId } = req.params;
+  const { text } = req.body as { text: string };
+  const { roomId } = req.params as { roomId: string };
   const { id: authorId } = req.user!;
 
   const preview = await messageService.create(roomId, authorId, text);

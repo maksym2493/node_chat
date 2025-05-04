@@ -8,11 +8,7 @@ class MessageRepository {
       orderBy: { createdAt: 'desc' },
 
       include: {
-        author: {
-          select: {
-            name: true,
-          },
-        },
+        author: true,
       },
 
       take: 100,
@@ -24,11 +20,7 @@ class MessageRepository {
       data: { roomId, authorId, text },
 
       include: {
-        author: {
-          select: {
-            name: true,
-          },
-        },
+        author: true,
       },
     });
   }
