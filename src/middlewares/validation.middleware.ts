@@ -1,27 +1,35 @@
-import { RequestHandler } from 'express';
+import { Request, Response, NextFunction } from 'express';
 import { validationResult } from 'express-validator';
 
+import { ZodError, ZodTypeAny } from 'zod';
 import { ApiError } from '../exceptions/api.error';
 
-export const validationMiddleware: RequestHandler = (req, res, next) => {
-  const errors = validationResult(req);
+export function validationMiddleware(
+  schema: ZodTypeAny,
+  source: 'body' | 'params' | 'cookies' | 'headers' = 'body',
+) {
+  return (req: Request, _res: Response, next: NextFunction) => {
+    try {
+      const data = req[source];
 
-  const formattedErrors = errors.array().reduce(
-    (acc, error) => {
-      if (error.type === 'field') {
-        if (!acc[error.path]) {
-          acc[error.path] = error.msg;
-        }
+      schema.parse(data);
+      next();
+    } catch (error) {
+      if (error instanceof ZodError) {
+        const formattedErrors = error.errors.reduce(
+          (acc, { path, message }) => {
+            const field = path.join('.');
+            acc[field] = message;
+
+            return acc;
+          },
+          {} as Record<string, string>,
+        );
+
+        throw ApiError.badRequest('Validation error', formattedErrors);
       }
 
-      return acc;
-    },
-    {} as Record<string, string>,
-  );
-
-  if (!errors.isEmpty()) {
-    throw ApiError.badRequest('Validation error', formattedErrors);
-  }
-
-  next();
-};
+      next(error);
+    }
+  };
+}

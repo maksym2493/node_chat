@@ -1,22 +1,37 @@
-import { RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import { messageService } from '../services/message.service';
 
-const getAll: RequestHandler = async (req, res) => {
-  const { roomId } = req.params as { roomId: string };
-  const { id: userId } = req.user!;
-  const previews = await messageService.getAll(roomId, userId);
+import { TextSchema } from '../schemas/text.schema';
+import { RoomIdSchema } from '../schemas/roomId.schema';
 
-  res.json({ message: 'OK', data: previews });
-};
+import { ResponseBody } from '../types/ResponseBody';
+import { NormalizedUser } from '../types/NormalizedUser';
+import { MessagePreview } from '../types/MessagePreview';
 
-const create: RequestHandler = async (req, res) => {
-  const { text } = req.body as { text: string };
-  const { roomId } = req.params as { roomId: string };
-  const { id: authorId } = req.user!;
+class MessageController {
+  getAll = async (
+    req: Request<RoomIdSchema> & { user: NormalizedUser },
+    res: Response<ResponseBody<MessagePreview[]>>,
+  ) => {
+    const { roomId } = req.params;
+    const { id: userId } = req.user;
+    const previews = await messageService.getAll(roomId, userId);
 
-  const preview = await messageService.create(roomId, authorId, text);
+    res.json({ message: 'OK', data: previews });
+  };
 
-  res.status(201).json({ message: 'OK', data: preview });
-};
+  create = async (
+    req: Request<RoomIdSchema, {}, TextSchema> & { user: NormalizedUser },
+    res: Response<ResponseBody<MessagePreview>>,
+  ) => {
+    const { text } = req.body;
+    const { roomId } = req.params;
+    const { id: authorId } = req.user;
 
-export const messageController = { getAll, create };
+    const preview = await messageService.create(roomId, authorId, text);
+
+    res.status(201).json({ message: 'OK', data: preview });
+  };
+}
+
+export const messageController = new MessageController();

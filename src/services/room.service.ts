@@ -1,6 +1,7 @@
 import { Room } from '@prisma/client';
 import { RawMessage } from '../types/RawMessage';
 import { RoomPreview } from '../types/RoomPreview';
+import { RoomWithRole } from '../types/RoomWithRole';
 import { NormalizedRoom } from '../types/NormalizedRoom';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
@@ -8,8 +9,6 @@ import { messageService } from './message.service';
 import { roomRepository } from '../entity/room.repository';
 
 import { ApiError } from '../exceptions/api.error';
-
-type RoomWithRole = Omit<RoomPreview, 'lastMessage'>;
 
 class RoomService {
   normalize({ id, name }: Room): NormalizedRoom {
@@ -54,6 +53,17 @@ class RoomService {
 
       return this.buildRoomPreview(room, true);
     } catch (err) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as any).code === 'P2002'
+      ) {
+        throw ApiError.conflict('Creating error', {
+          name: 'Room already exist',
+        });
+      }
+
       throw err;
     }
   }

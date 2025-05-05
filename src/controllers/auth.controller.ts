@@ -1,42 +1,55 @@
-import { RequestHandler, Response } from 'express';
+import { Request, Response } from 'express';
 
 import { AuthData } from '../types/AuthData';
 import { authService } from '../services/auth.service';
 import { tokenService } from '../services/token.service';
 
-const register: RequestHandler = async (req, res) => {
-  const { name } = req.body as { name: string };
-  const authData = await authService.register(name);
+import { NameSchema } from '../schemas/name.schema';
+import { ResponseBody } from '../types/ResponseBody';
+import { NormalizedUser } from '../types/NormalizedUser';
+import { RefreshTokenSchema } from '../schemas/token.schema';
 
-  await sendAuthentication(res, authData);
-};
+type AuthResponse = Response<
+  ResponseBody<{ user: NormalizedUser; accessToken: string }>
+>;
 
-const refreshToken: RequestHandler = async (req, res) => {
-  const refreshToken = req.cookies.refreshToken as string;
-  const authData = await tokenService.refresh(refreshToken);
+class AuthController {
+  register = async (req: Request<{}, {}, NameSchema>, res: AuthResponse) => {
+    const { name } = req.body;
+    const authData = await authService.register(name);
 
-  await sendAuthentication(res, authData);
-};
+    await this.sendAuthentication(res, authData);
+  };
 
-async function sendAuthentication(
-  res: Response,
-  { refreshToken, normalizedUser: user, ...otherData }: AuthData,
-) {
-  res.cookie('refreshToken', refreshToken, {
-    maxAge: 7 * 24 * 60 * 60 * 1000,
-    httpOnly: true,
-    sameSite: 'none',
-    secure: true,
-  });
+  refreshToken = async (
+    req: Request & { cookies: RefreshTokenSchema },
+    res: AuthResponse,
+  ) => {
+    const { refreshToken } = req.cookies;
+    const authData = await tokenService.refresh(refreshToken);
 
-  res.status(201).json({
-    message: 'OK',
+    await this.sendAuthentication(res, authData);
+  };
 
-    data: {
-      user,
-      ...otherData,
-    },
-  });
+  private sendAuthentication = async (
+    res: AuthResponse,
+    { refreshToken, normalizedUser: user, ...otherData }: AuthData,
+  ) => {
+    res.cookie('refreshToken', refreshToken, {
+      maxAge: 7 * 24 * 60 * 60 * 1000,
+      httpOnly: true,
+      sameSite: 'none',
+      secure: true,
+    });
+
+    res.status(201).json({
+      message: 'OK',
+      data: {
+        user,
+        ...otherData,
+      },
+    });
+  };
 }
 
-export const authController = { register, refreshToken };
+export const authController = new AuthController();

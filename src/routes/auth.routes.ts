@@ -2,23 +2,21 @@ import { Router } from 'express';
 import cookieParser from 'cookie-parser';
 import { authController } from '../controllers/auth.controller';
 
-import { nameValidation } from '../validations/name.validation';
-import { tokenValidation } from '../validations/token.validation';
+import { nameSchema } from '../schemas/name.schema';
+import { tokenSchema } from '../schemas/token.schema';
 import { validationMiddleware } from '../middlewares/validation.middleware';
 
 export const authRoute = Router();
 
 authRoute.post(
   '/registration',
-  nameValidation,
-  validationMiddleware,
+  validationMiddleware(nameSchema),
   authController.register,
 );
 
 authRoute.post(
   '/refresh-token',
   cookieParser(),
-  tokenValidation.refreshToken,
-  validationMiddleware,
+  validationMiddleware(tokenSchema.refreshToken, 'cookies'),
   authController.refreshToken,
 );

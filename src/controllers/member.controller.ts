@@ -1,15 +1,24 @@
-import { RequestHandler } from 'express';
+import { Request, Response } from 'express';
 import { memberService } from '../services/member.service';
 
-const join: RequestHandler = async (req, res) => {
-  const { roomId } = req.params as { roomId: string };
-  const { id: userId } = req.user!;
-  const normalizedRoom = await memberService.join(roomId, userId);
+import { ResponseBody } from '../types/ResponseBody';
+import { RoomIdSchema } from '../schemas/roomId.schema';
+import { NormalizedUser } from '../types/NormalizedUser';
 
-  res.status(200).json({
-    message: 'OK',
-    data: normalizedRoom,
-  });
-};
+class MemberController {
+  join = async (
+    req: Request<RoomIdSchema> & { user: NormalizedUser },
+    res: Response<ResponseBody<NormalizedUser>>,
+  ) => {
+    const { roomId } = req.params;
+    const { id: userId } = req.user;
+    const normalizedRoom = await memberService.join(roomId, userId);
 
-export const memberController = { join };
+    res.status(200).json({
+      message: 'OK',
+      data: normalizedRoom,
+    });
+  };
+}
+
+export const memberController = new MemberController();

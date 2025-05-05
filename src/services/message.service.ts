@@ -31,7 +31,7 @@ class MessageService {
     roomId: string,
     authorId: string,
     text: string,
-  ): Promise<NormalizedMessage> {
+  ): Promise<MessagePreview> {
     await roomService.getWithRole(roomId, authorId);
     const rawMessage = await messageRepository.create(roomId, authorId, text);
 

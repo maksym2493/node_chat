@@ -7,7 +7,7 @@ import { roomRoute } from './routes/room.routes';
 import { authMiddleware } from './middlewares/auth.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
 
-import { tokenValidation } from './validations/token.validation';
+import { tokenSchema } from './schemas/token.schema';
 import { validationMiddleware } from './middlewares/validation.middleware';
 
 const CLIENT_URL = process.env.CLIENT_URL;
@@ -29,8 +29,7 @@ export function createApp(): Express {
 
   app.use(
     '/api/rooms',
-    tokenValidation.accessToken,
-    validationMiddleware,
+    validationMiddleware(tokenSchema.accessToken, 'headers'),
     authMiddleware,
     roomRoute,
   );

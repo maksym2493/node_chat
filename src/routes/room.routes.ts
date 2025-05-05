@@ -3,8 +3,8 @@ import { memberRoute } from './member.route';
 import { messageRoute } from './message.route';
 import { roomController } from '../controllers/room.controller';
 
-import { nameValidation } from '../validations/name.validation';
-import { roomIdValidation } from '../validations/roomId.validation';
+import { nameSchema } from '../schemas/name.schema';
+import { roomIdSchema } from '../schemas/roomId.schema';
 import { validationMiddleware } from '../middlewares/validation.middleware';
 
 export const roomRoute = Router();
@@ -13,28 +13,20 @@ roomRoute.get('/', roomController.getAll);
 
 roomRoute.get(
   '/:roomId',
-  roomIdValidation,
-  validationMiddleware,
+  validationMiddleware(roomIdSchema, 'params'),
   roomController.getWithRole,
 );
 
-roomRoute.post(
-  '/',
-  nameValidation,
-  validationMiddleware,
-  roomController.create,
-);
+roomRoute.post('/', validationMiddleware(nameSchema), roomController.create);
 
 roomRoute.use(
   '/:roomId/members',
-  roomIdValidation,
-  validationMiddleware,
+  validationMiddleware(roomIdSchema, 'params'),
   memberRoute,
 );
 
 roomRoute.use(
   '/:roomId/messages',
-  roomIdValidation,
-  validationMiddleware,
+  validationMiddleware(roomIdSchema, 'params'),
   messageRoute,
 );
