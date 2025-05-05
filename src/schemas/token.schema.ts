@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const refreshToken = z.object({
+const refresh = z.object({
   refreshToken: z
     .string({
       required_error: 'RefreshToken is required',
@@ -9,7 +9,7 @@ const refreshToken = z.object({
     .jwt({ message: 'Invalid refresh token' }),
 });
 
-const accessToken = z.object({
+const authorization = z.object({
   authorization: z
     .string({
       required_error: 'AccessToken is required',
@@ -18,7 +18,21 @@ const accessToken = z.object({
     .regex(/^Bearer\s[\w-]+\.[\w-]+\.[\w-]+$/, 'Invalid access token'),
 });
 
-export const tokenSchema = { refreshToken, accessToken };
+const access = z.object({
+  accessToken: z
+    .string({
+      required_error: 'AccessToken is required',
+      invalid_type_error: 'AccessToken must be a string',
+    })
+    .jwt({ message: 'Invalid access token' }),
+});
 
-export type AccessTokenSchema = z.infer<typeof accessToken>;
-export type RefreshTokenSchema = z.infer<typeof refreshToken>;
+export const tokenSchema = {
+  access,
+  refresh,
+  authorization,
+};
+
+export type AccessTokenSchema = z.infer<typeof access>;
+export type RefreshTokenSchema = z.infer<typeof refresh>;
+export type AuthorizationTokenSchema = z.infer<typeof authorization>;

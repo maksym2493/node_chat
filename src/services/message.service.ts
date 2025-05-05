@@ -2,11 +2,12 @@ import { Message } from '@prisma/client';
 
 import { roomService } from './room.service';
 import { userService } from './user.service';
-import { memberService } from './member.service';
 import { RawMessage } from '../types/RawMessage';
 import { MessagePreview } from '../types/MessagePreview';
 import { NormalizedMessage } from '../types/NormalizedMessage';
 import { messageRepository } from '../entity/message.repository';
+
+import { messageEmitter } from '../emitters/message.emitter';
 
 class MessageService {
   normalize({ id, text, createdAt }: Message): NormalizedMessage {
@@ -33,9 +34,13 @@ class MessageService {
     text: string,
   ): Promise<MessagePreview> {
     await roomService.getWithRole(roomId, authorId);
-    const rawMessage = await messageRepository.create(roomId, authorId, text);
 
-    return this.buildMessagePreview(rawMessage);
+    const rawMessage = await messageRepository.create(roomId, authorId, text);
+    const preview = this.buildMessagePreview(rawMessage);
+
+    messageEmitter.emit('message', { roomId, preview });
+
+    return preview;
   }
 }
 

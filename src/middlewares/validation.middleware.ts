@@ -1,7 +1,6 @@
-import { Request, Response, NextFunction } from 'express';
-import { validationResult } from 'express-validator';
-
 import { ZodError, ZodTypeAny } from 'zod';
+import { Request, Response, NextFunction } from 'express';
+
 import { ApiError } from '../exceptions/api.error';
 
 export function validationMiddleware(

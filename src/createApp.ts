@@ -29,7 +29,7 @@ export function createApp(): Express {
 
   app.use(
     '/api/rooms',
-    validationMiddleware(tokenSchema.accessToken, 'headers'),
+    validationMiddleware(tokenSchema.authorization, 'headers'),
     authMiddleware,
     roomRoute,
   );

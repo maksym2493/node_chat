@@ -17,6 +17,6 @@ authRoute.post(
 authRoute.post(
   '/refresh-token',
   cookieParser(),
-  validationMiddleware(tokenSchema.refreshToken, 'cookies'),
+  validationMiddleware(tokenSchema.refresh, 'cookies'),
   authController.refreshToken,
 );
