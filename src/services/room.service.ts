@@ -9,6 +9,7 @@ import { messageService } from './message.service';
 import { roomRepository } from '../entity/room.repository';
 
 import { ApiError } from '../exceptions/api.error';
+import { messageEmitter } from '../emitters/message.emitter';
 
 class RoomService {
   normalize({ id, name }: Room): NormalizedRoom {
@@ -30,11 +31,11 @@ class RoomService {
     };
   }
 
-  async getAll(userId: string): Promise<RoomPreview[]> {
-    const rawRooms = await roomRepository.getAll(userId);
+  async getSummary(userId: string): Promise<RoomPreview[]> {
+    const rawRooms = await roomRepository.getSummary(userId);
 
-    return rawRooms.map(({ messages, members, ...room }) =>
-      this.buildRoomPreview(room, members[0].creator, messages[0]),
+    return rawRooms.map(({ messages, ...room }) =>
+      this.buildRoomPreview(room, userId === room.creatorId, messages[0]),
     );
   }
 
@@ -46,10 +47,11 @@ class RoomService {
 
   async create(
     name: string,
+    userId: string,
     tx?: PrismaTransactionClient,
   ): Promise<RoomPreview> {
     try {
-      const room = await roomRepository.create(name, tx);
+      const room = await roomRepository.create(name, userId, tx);
 
       return this.buildRoomPreview(room, true);
     } catch (err) {
@@ -69,13 +71,13 @@ class RoomService {
   }
 
   async getWithRole(id: string, userId: string): Promise<RoomWithRole> {
-    const roomWithRole = await roomRepository.getWithRole(id, userId);
+    const roomWithMember = await roomRepository.getWithMember(id, userId);
 
-    if (!roomWithRole) {
+    if (!roomWithMember) {
       throw ApiError.notFound('Room not found');
     }
 
-    const { members, ...room } = roomWithRole;
+    const { members, ...room } = roomWithMember;
 
     if (!members.length) {
       throw ApiError.forbidden();
@@ -83,8 +85,19 @@ class RoomService {
 
     return {
       ...this.normalize(room),
-      creator: members[0].creator,
+      creator: userId === room.creatorId,
     };
+  }
+
+  async delete(id: string, userId: string): Promise<void> {
+    const roomWithRole = await this.getWithRole(id, userId);
+
+    if (!roomWithRole.creator) {
+      throw ApiError.forbidden();
+    }
+
+    await roomRepository.delete(id);
+    messageEmitter.emit('delete', { roomId: id });
   }
 }
 

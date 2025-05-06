@@ -1,14 +1,10 @@
 import cors from 'cors';
 import express, { Express } from 'express';
 
-import { authRoute } from './routes/auth.routes';
-import { roomRoute } from './routes/room.routes';
+import { authRoute } from './routes/auth.route';
+import { roomRoute } from './routes/room.route';
 
-import { authMiddleware } from './middlewares/auth.middleware';
 import { errorMiddleware } from './middlewares/error.middleware';
-
-import { tokenSchema } from './schemas/token.schema';
-import { validationMiddleware } from './middlewares/validation.middleware';
 
 const CLIENT_URL = process.env.CLIENT_URL;
 
@@ -26,13 +22,7 @@ export function createApp(): Express {
   app.use(express.json());
 
   app.use('/api/auth', authRoute);
-
-  app.use(
-    '/api/rooms',
-    validationMiddleware(tokenSchema.authorization, 'headers'),
-    authMiddleware,
-    roomRoute,
-  );
+  app.use('/api/rooms', roomRoute);
 
   app.use(errorMiddleware);
 

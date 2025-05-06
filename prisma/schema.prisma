@@ -15,8 +15,10 @@ model User {
   token        Token?
   messages     Message[]
   memberships  Member[]
+  createdRooms Room[]
 
   @@map("users")
+  @@index([name])
 }
 
 model Token {
@@ -25,9 +27,10 @@ model Token {
   createdAt    DateTime @default(now()) @map("created_at")
 
   userId       String   @unique @map("user_id") @db.Uuid
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("tokens")
+  @@index([token])
 }
 
 model Room {
@@ -39,22 +42,26 @@ model Room {
   messages     Message[]
   members      Member[]
 
+  creatorId    String   @map("creator_id") @db.Uuid
+  creator      User     @relation(fields: [creatorId], references: [id], onDelete: Cascade)
+
   @@map("rooms")
+  @@index([name])
 }
 
 model Member {
   id           Int      @id @default(autoincrement())
-  creator      Boolean  @default(false)
   createdAt    DateTime @default(now()) @map("created_at")
 
   roomId       String   @map("room_id") @db.Uuid
-  room         Room     @relation(fields: [roomId], references: [id])
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   userId       String   @map("user_id") @db.Uuid
-  user         User     @relation(fields: [userId], references: [id])
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([roomId, userId])
   @@map("members")
+  @@index([roomId, userId])
 }
 
 model Message {
@@ -63,10 +70,11 @@ model Message {
   createdAt    DateTime @default(now()) @map("created_at")
 
   roomId       String   @map("room_id") @db.Uuid
-  room         Room     @relation(fields: [roomId], references: [id])
+  room         Room     @relation(fields: [roomId], references: [id], onDelete: Cascade)
 
   authorId     String   @map("author_id") @db.Uuid
-  author       User     @relation(fields: [authorId], references: [id])
+  author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("messages")
+  @@index([roomId])
 }

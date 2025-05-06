@@ -11,16 +11,16 @@ type RoomBroadcastData = MessageBroadcast;
 class RoomManager {
   private rooms = new Map<string, Map<string, WebSocket>>();
 
-  join(roomId: string, userId: string, ws: WebSocket) {
-    if (!this.rooms.has(roomId)) {
-      this.rooms.set(roomId, new Map());
+  join(id: string, userId: string, ws: WebSocket) {
+    if (!this.rooms.has(id)) {
+      this.rooms.set(id, new Map());
     }
 
-    this.rooms.get(roomId)!.set(userId, ws);
+    this.rooms.get(id)!.set(userId, ws);
   }
 
-  leave(roomId: string, ws: WebSocket) {
-    const room = this.rooms.get(roomId);
+  leave(id: string, ws: WebSocket) {
+    const room = this.rooms.get(id);
 
     if (room) {
       for (const [userId, socket] of room.entries()) {
@@ -31,13 +31,27 @@ class RoomManager {
       }
 
       if (room.size === 0) {
-        this.rooms.delete(roomId);
+        this.rooms.delete(id);
       }
     }
   }
 
-  broadcast(roomId: string, data: RoomBroadcastData) {
-    const room = this.rooms.get(roomId);
+  delete(id: string) {
+    const room = this.rooms.get(id);
+
+    if (room) {
+      for (const [, client] of room) {
+        if (client.readyState === WebSocket.OPEN) {
+          client.close(4002, 'The room was deleted');
+        }
+      }
+
+      this.rooms.delete(id);
+    }
+  }
+
+  broadcast(id: string, data: RoomBroadcastData) {
+    const room = this.rooms.get(id);
 
     if (room) {
       for (const [, client] of room) {
@@ -48,8 +62,8 @@ class RoomManager {
     }
   }
 
-  getSocket(roomId: string, userId: string): WebSocket | undefined {
-    return this.rooms.get(roomId)?.get(userId);
+  getSocket(id: string, userId: string): WebSocket | undefined {
+    return this.rooms.get(id)?.get(userId);
   }
 }
 

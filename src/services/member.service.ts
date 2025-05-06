@@ -11,10 +11,9 @@ class MemberService {
   async create(
     roomId: string,
     userId: string,
-    creator: boolean,
     tx?: PrismaTransactionClient,
   ): Promise<Member> {
-    const member = await memberRepository.create(roomId, userId, creator, tx);
+    const member = await memberRepository.create(roomId, userId, tx);
 
     return member;
   }
@@ -29,7 +28,7 @@ class MemberService {
     }
 
     try {
-      await memberRepository.create(roomId, userId, false);
+      await memberRepository.create(roomId, userId);
       return normalizedRoom;
     } catch (err) {
       if (

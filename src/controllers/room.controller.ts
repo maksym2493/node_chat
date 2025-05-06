@@ -2,8 +2,6 @@ import { Request, RequestHandler, Response } from 'express';
 
 import { db } from '../utils/db';
 import { roomService } from '../services/room.service';
-import { NormalizedRoom } from '../types/NormalizedRoom';
-import { NormalizedUser } from '../types/NormalizedUser';
 import { memberService } from '../services/member.service';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
@@ -15,9 +13,12 @@ import { ResponseBody } from '../types/ResponseBody';
 import { RoomWithRole } from '../types/RoomWithRole';
 
 class RoomController {
-  getAll = async (req: Request, res: Response<ResponseBody<RoomPreview[]>>) => {
+  getSummary = async (
+    req: Request,
+    res: Response<ResponseBody<RoomPreview[]>>,
+  ) => {
     const { id: userId } = req.user!;
-    const preview = await roomService.getAll(userId);
+    const preview = await roomService.getSummary(userId);
 
     res.json({
       message: 'OK',
@@ -49,8 +50,8 @@ class RoomController {
 
     const preview = await db.$transaction(
       async (tx: PrismaTransactionClient): Promise<RoomPreview> => {
-        const preview = await roomService.create(name, tx);
-        await memberService.create(preview.id, userId, true, tx);
+        const preview = await roomService.create(name, userId, tx);
+        await memberService.create(preview.id, userId, tx);
 
         return preview;
       },
@@ -60,6 +61,14 @@ class RoomController {
       message: 'OK',
       data: preview,
     });
+  };
+
+  delete = async (req: Request<RoomIdSchema>, res: Response<void>) => {
+    const { id: userId } = req.user!;
+    const { roomId: id } = req.params;
+
+    await roomService.delete(id, userId);
+    res.sendStatus(204);
   };
 }
 

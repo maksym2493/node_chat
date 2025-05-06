@@ -3,13 +3,11 @@ import { Member, Room } from '@prisma/client';
 import { RawMessage } from '../types/RawMessage';
 import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
-type RawRoomInfo = Room & { messages: RawMessage[]; members: Member[] };
-
-type Role = Pick<Member, 'creator'>;
-type RawRoomWithRole = Room & { members: Role[] };
+type RawRoomInfo = Room & { messages: RawMessage[] };
+type RawRoomWithRole = Room & { members: Pick<Member, 'id'>[] };
 
 class RoomRepository {
-  getAll(userId: string): Promise<RawRoomInfo[]> {
+  getSummary(userId: string): Promise<RawRoomInfo[]> {
     return db.room.findMany({
       where: {
         members: {
@@ -26,17 +24,7 @@ class RoomRepository {
             author: true,
           },
         },
-
-        members: {
-          where: { userId },
-        },
       },
-    });
-  }
-
-  create(name: string, tx?: PrismaTransactionClient): Promise<Room> {
-    return (tx || db).room.create({
-      data: { name },
     });
   }
 
@@ -44,23 +32,34 @@ class RoomRepository {
     return db.room.findUnique({ where: { id } });
   }
 
-  getWithRole(id: string, userId: string): Promise<RawRoomWithRole | null> {
+  async getWithMember(
+    id: string,
+    userId: string,
+  ): Promise<RawRoomWithRole | null> {
     return db.room.findUnique({
       where: { id },
-
       include: {
         members: {
-          take: 1,
-
-          where: {
-            userId,
-          },
-
-          select: {
-            creator: true,
-          },
+          where: { userId },
+          select: { id: true },
         },
       },
+    });
+  }
+
+  create(
+    name: string,
+    creatorId: string,
+    tx?: PrismaTransactionClient,
+  ): Promise<Room> {
+    return (tx || db).room.create({
+      data: { name, creatorId },
+    });
+  }
+
+  delete(id: string) {
+    return db.room.delete({
+      where: { id },
     });
   }
 }
