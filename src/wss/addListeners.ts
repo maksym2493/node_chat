@@ -10,4 +10,11 @@ export function addListeners() {
       payload: preview,
     });
   });
+
+  messageEmitter.on('leave', (data) => {
+    const { roomId, userId } = data;
+    const ws = roomManager.getSocket(roomId, userId);
+
+    ws?.close(4001, 'You have left the room');
+  });
 }

@@ -10,23 +10,23 @@ import { MessagePreview } from '../types/MessagePreview';
 
 class MessageController {
   getAll = async (
-    req: Request<RoomIdSchema> & { user: NormalizedUser },
+    req: Request<RoomIdSchema>,
     res: Response<ResponseBody<MessagePreview[]>>,
   ) => {
     const { roomId } = req.params;
-    const { id: userId } = req.user;
+    const { id: userId } = req.user!;
     const previews = await messageService.getAll(roomId, userId);
 
     res.json({ message: 'OK', data: previews });
   };
 
   create = async (
-    req: Request<RoomIdSchema, {}, TextSchema> & { user: NormalizedUser },
+    req: Request<RoomIdSchema, {}, TextSchema>,
     res: Response<ResponseBody<MessagePreview>>,
   ) => {
     const { text } = req.body;
     const { roomId } = req.params;
-    const { id: authorId } = req.user;
+    const { id: authorId } = req.user!;
 
     const preview = await messageService.create(roomId, authorId, text);
 

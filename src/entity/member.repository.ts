@@ -12,6 +12,17 @@ class MemberRepository {
     return (tx || db).member.create({ data: { roomId, userId, creator } });
   }
 
+  delete(roomId: string, userId: string): Promise<Member> {
+    return db.member.delete({
+      where: {
+        roomId_userId: {
+          roomId,
+          userId,
+        },
+      },
+    });
+  }
+
   get(roomId: string, userId: string): Promise<Member | null> {
     return db.member.findUnique({
       where: { roomId_userId: { roomId, userId } },

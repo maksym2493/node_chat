@@ -15,11 +15,8 @@ import { ResponseBody } from '../types/ResponseBody';
 import { RoomWithRole } from '../types/RoomWithRole';
 
 class RoomController {
-  getAll = async (
-    req: Request & { user: NormalizedUser },
-    res: Response<ResponseBody<RoomPreview[]>>,
-  ) => {
-    const { id: userId } = req.user;
+  getAll = async (req: Request, res: Response<ResponseBody<RoomPreview[]>>) => {
+    const { id: userId } = req.user!;
     const preview = await roomService.getAll(userId);
 
     res.json({
@@ -29,10 +26,10 @@ class RoomController {
   };
 
   getWithRole = async (
-    req: Request<RoomIdSchema> & { user: NormalizedUser },
+    req: Request<RoomIdSchema>,
     res: Response<ResponseBody<RoomWithRole>>,
   ) => {
-    const { id: userId } = req.user;
+    const { id: userId } = req.user!;
     const { roomId: id } = req.params;
 
     const roomWithRole = await roomService.getWithRole(id, userId);
@@ -44,11 +41,11 @@ class RoomController {
   };
 
   create = async (
-    req: Request<{}, {}, NameSchema> & { user: NormalizedUser },
+    req: Request<{}, {}, NameSchema>,
     res: Response<ResponseBody<RoomPreview>>,
   ) => {
     const { name } = req.body;
-    const { id: userId } = req.user;
+    const { id: userId } = req.user!;
 
     const preview = await db.$transaction(
       async (tx: PrismaTransactionClient): Promise<RoomPreview> => {

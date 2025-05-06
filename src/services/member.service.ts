@@ -5,6 +5,7 @@ import { PrismaTransactionClient } from '../types/PrismaTransactionClient';
 
 import { ApiError } from '../exceptions/api.error';
 import { NormalizedRoom } from '../types/NormalizedRoom';
+import { messageEmitter } from '../emitters/message.emitter';
 
 class MemberService {
   async create(
@@ -28,7 +29,7 @@ class MemberService {
     }
 
     try {
-      await memberRepository.create(normalizedRoom.id, userId, false);
+      await memberRepository.create(roomId, userId, false);
       return normalizedRoom;
     } catch (err) {
       if (
@@ -44,6 +45,19 @@ class MemberService {
 
       throw err;
     }
+  }
+
+  async leave(roomId: string, userId: string): Promise<void> {
+    const roomWithRole = await roomService.getWithRole(roomId, userId);
+
+    if (roomWithRole.creator) {
+      throw ApiError.badRequest(
+        'You can not leave this room because you are a creator',
+      );
+    }
+
+    await memberRepository.delete(roomId, userId);
+    messageEmitter.emit('leave', { roomId, userId });
   }
 }
 

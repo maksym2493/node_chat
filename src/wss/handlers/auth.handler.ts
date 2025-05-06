@@ -15,7 +15,7 @@ const authSchema = tokenSchema.access.merge(roomIdSchema);
 export async function authHandler(
   _ws: WebSocket,
   req: IncomingMessage,
-): Promise<string> {
+): Promise<{ roomId: string; userId: string }> {
   const url = new URL(req.url!, `http://${req.headers.host}`);
   const searchParams = Object.fromEntries(url.searchParams.entries());
 
@@ -34,7 +34,7 @@ export async function authHandler(
 
   try {
     await roomService.getWithRole(roomId, userData.id);
-    return roomId;
+    return { roomId, userId: userData.id };
   } catch (err) {
     if (err instanceof ApiError) {
       switch (err.status) {

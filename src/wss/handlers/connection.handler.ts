@@ -5,9 +5,9 @@ import { authHandler } from './auth.handler';
 import { roomManager } from '../room.manager';
 
 export async function connectionHandler(ws: WebSocket, req: IncomingMessage) {
-  const roomId = await authHandler(ws, req);
+  const { roomId, userId } = await authHandler(ws, req);
 
-  roomManager.join(roomId, ws);
+  roomManager.join(roomId, userId, ws);
 
   ws.on('close', () => {
     roomManager.leave(roomId, ws);
