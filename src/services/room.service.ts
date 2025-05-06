@@ -111,6 +111,12 @@ class RoomService {
       throw ApiError.forbidden();
     }
 
+    if (roomWithRole.name === newName) {
+      throw ApiError.badRequest('Changing error', {
+        name: 'New name must be different',
+      });
+    }
+
     try {
       const rawRoom = await roomRepository.changeName(id, newName);
       messageEmitter.emit('changeName', { roomId: id, newName });

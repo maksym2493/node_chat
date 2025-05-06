@@ -13,7 +13,7 @@ export function createApp(): Express {
 
   app.use(
     cors({
-      methods: ['POST', 'DELETE'],
+      methods: ['POST', 'PATCH', 'DELETE'],
       credentials: true,
       origin: CLIENT_URL,
     }),

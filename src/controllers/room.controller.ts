@@ -81,7 +81,7 @@ class RoomController {
 
     const roomWithRole = await roomService.changeName(id, userId, name);
 
-    res.sendStatus(200).json({
+    res.json({
       message: 'OK',
       data: roomWithRole,
     });
