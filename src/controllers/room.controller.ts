@@ -70,6 +70,22 @@ class RoomController {
     await roomService.delete(id, userId);
     res.sendStatus(204);
   };
+
+  changeName = async (
+    req: Request<RoomIdSchema, {}, NameSchema>,
+    res: Response<ResponseBody<RoomWithRole>>,
+  ) => {
+    const { name } = req.body;
+    const { id: userId } = req.user!;
+    const { roomId: id } = req.params;
+
+    const roomWithRole = await roomService.changeName(id, userId, name);
+
+    res.sendStatus(200).json({
+      message: 'OK',
+      data: roomWithRole,
+    });
+  };
 }
 
 export const roomController = new RoomController();

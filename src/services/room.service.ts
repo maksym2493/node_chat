@@ -99,6 +99,41 @@ class RoomService {
     await roomRepository.delete(id);
     messageEmitter.emit('delete', { roomId: id });
   }
+
+  async changeName(
+    id: string,
+    userId: string,
+    newName: string,
+  ): Promise<RoomWithRole> {
+    const roomWithRole = await this.getWithRole(id, userId);
+
+    if (!roomWithRole.creator) {
+      throw ApiError.forbidden();
+    }
+
+    try {
+      const rawRoom = await roomRepository.changeName(id, newName);
+      messageEmitter.emit('changeName', { roomId: id, newName });
+
+      return {
+        ...this.normalize(rawRoom),
+        creator: true,
+      };
+    } catch (err) {
+      if (
+        typeof err === 'object' &&
+        err !== null &&
+        'code' in err &&
+        (err as any).code === 'P2002'
+      ) {
+        throw ApiError.conflict('Changing error', {
+          name: 'Room already exist',
+        });
+      }
+
+      throw err;
+    }
+  }
 }
 
 export const roomService = new RoomService();

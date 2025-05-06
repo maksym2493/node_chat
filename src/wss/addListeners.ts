@@ -17,4 +17,11 @@ export function addListeners() {
   messageEmitter.on('delete', ({ roomId }) => {
     roomManager.delete(roomId);
   });
+
+  messageEmitter.on('changeName', ({ roomId, newName }) => {
+    roomManager.broadcast(roomId, {
+      type: 'name_changed',
+      payload: newName,
+    });
+  });
 }

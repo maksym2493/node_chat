@@ -6,7 +6,12 @@ interface MessageBroadcast {
   payload: MessagePreview;
 }
 
-type RoomBroadcastData = MessageBroadcast;
+interface NameChangedBroadcast {
+  type: 'name_changed';
+  payload: string;
+}
+
+type RoomBroadcastData = MessageBroadcast | NameChangedBroadcast;
 
 class RoomManager {
   private rooms = new Map<string, Map<string, WebSocket>>();

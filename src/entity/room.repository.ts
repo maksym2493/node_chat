@@ -62,6 +62,13 @@ class RoomRepository {
       where: { id },
     });
   }
+
+  changeName(id: string, name: string): Promise<Room> {
+    return db.room.update({
+      where: { id },
+      data: { name },
+    });
+  }
 }
 
 export const roomRepository = new RoomRepository();

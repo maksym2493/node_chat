@@ -76,5 +76,5 @@ model Message {
   author       User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
 
   @@map("messages")
-  @@index([roomId])
+  @@index([roomId, authorId])
 }

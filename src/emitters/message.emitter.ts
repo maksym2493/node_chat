@@ -4,6 +4,7 @@ import { MessagePreview } from '../types/MessagePreview';
 interface MyEvents {
   delete: [{ roomId: string }];
   leave: [{ roomId: string; userId: string }];
+  changeName: [{ roomId: string; newName: string }];
 
   message: [{ roomId: string; preview: MessagePreview }];
 }
