@@ -66,7 +66,7 @@ class RoomRepository {
   changeName(id: string, name: string): Promise<Room> {
     return db.room.update({
       where: { id },
-      data: { name },
+      data: { name, updatedAt: new Date() },
     });
   }
 }
