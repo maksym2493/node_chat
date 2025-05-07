@@ -3,7 +3,6 @@ import { db } from './utils/db';
 import { createApp } from './createApp';
 import { createWss } from './wss/createWss';
 
-import { addListeners } from './wss/addListeners';
 import { messageEmitter } from './emitters/message.emitter';
 import closeWithGrace, { CloseWithGraceCallback } from 'close-with-grace';
 
@@ -12,8 +11,6 @@ const PORT = process.env.PORT || 3000;
 
 const server = app.listen(PORT, () => console.log('Server is running.'));
 const wss = createWss(server);
-
-addListeners();
 
 const cb: CloseWithGraceCallback = async ({ err, signal }) => {
   if (err) {
